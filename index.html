@@ -44,16 +44,33 @@
                 var chosenPlaceName = event.get('item').value;
 
                 ymaps.geocode(chosenPlaceName).then(function (results) {
-					var geocodingResult = results.geoObjects.get(0);
+                    var geocodingResult = results.geoObjects.get(0);
                     var geocodingCoord = geocodingResult.geometry.getCoordinates();
 
                     var currentPlacemark = new ymaps.Placemark(geocodingCoord, {
-					    balloonContentBody: geocodingResult.properties.get('text')
-				    });
-                    
+                        balloonContentBody: geocodingResult.getAddressLine()
+                    }, {
+                        draggable: true
+                    });
+
                     map.geoObjects.add(currentPlacemark);
-                });    
+
+                    currentPlacemark.events.add('dragend', function (event) {
+                        var currentPlacemark = event.originalEvent.target;
+                        var dragendCoords = currentPlacemark.geometry.getCoordinates();
+                        getAddress(dragendCoords, currentPlacemark);
+                    });
+                });
             });
+
+            function getAddress(coords, currentPlacemark) {
+                ymaps.geocode(coords).then(function (results) {
+                    var geocodingResult = results.geoObjects.get(0);
+                    var dragendAddress = currentPlacemark.getAddressLine();
+                    console.log(dragendAddress);
+                    currentPlacemark.properties.set('balloonContent', dragendAddress);
+                });
+            }
         }
     </script>
 </body>
